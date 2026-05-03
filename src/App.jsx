@@ -27,13 +27,13 @@ const MAX_FILE_SIZE_MB = 20
 const DAILY_TARGET_DEFAULT = 320
 
 const tabs = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'upload', label: 'Upload' },
-  { id: 'history', label: 'History' },
-  { id: 'trend', label: 'Trends' },
-  { id: 'employees', label: 'Employees' },
-  { id: 'rotation', label: 'Rotation' },
-  { id: 'staff', label: 'Staff View' },
+  { id: 'dashboard', label: '📊 Dashboard' },
+  { id: 'upload', label: '📁 Upload' },
+  { id: 'history', label: '🕒 History' },
+  { id: 'trend', label: '📈 Trends' },
+  { id: 'employees', label: '👥 Employees' },
+  { id: 'rotation', label: '🔄 Rotation' },
+  { id: 'staff', label: '🏭 Staff View' },
 ]
 
 function fmtPct(value, digits = 2) {
