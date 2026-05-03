@@ -38,7 +38,7 @@ export default function StaffDashboard({ employees, stations, latestReport }) {
 
   const todayJS = new Date().getDay()
   const todayIdx = todayJS >= 0 && todayJS <= 4 ? todayJS : -1
-  const todayName = todayIdx >= 0 ? DAYS[todayIdx] : 'عطلة'
+  const todayName = todayIdx >= 0 ? DAYS[todayIdx] : 'Weekend'
 
   const weekSchedule = useMemo(() => {
     if (!startDate) return DAYS.map(() => stations.map(() => []))
@@ -65,8 +65,8 @@ export default function StaffDashboard({ employees, stations, latestReport }) {
     <section className="section">
       <div className="toolbar">
         <div>
-          <h2>داشبورد الموظفين</h2>
-          <p className="kpi-sub" style={{ marginTop: 2 }}>جدول التوزيع وأداء الإنتاج</p>
+          <h2>Staff Dashboard</h2>
+          <p className="kpi-sub" style={{ marginTop: 2 }}>Schedule and Production Performance</p>
         </div>
         <div className="tag" style={{ fontSize: 14, padding: '6px 16px', fontWeight: 700 }}>
           📅 {todayName} — {formatDateShort(todayISO)}
@@ -77,21 +77,21 @@ export default function StaffDashboard({ employees, stations, latestReport }) {
       {latestReport && (
         <div className="kpi-grid" style={{ marginBottom: 18 }}>
           <div className="kpi-card">
-            <div className="kpi-label">الهدف اليومي (Target)</div>
+            <div className="kpi-label">Daily Target</div>
             <div className="kpi-value">{targetBoards || '—'}</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-label">إنتاج Multi-TEST</div>
+            <div className="kpi-label">Multi-TEST Output</div>
             <div className="kpi-value">{multiTestOK}</div>
             <div style={{ marginTop: 6 }}>
               <span className="tag" style={{
                 background: targetStyle.bg, borderColor: targetStyle.border, color: targetStyle.color,
                 fontWeight: 700, fontSize: 13,
-              }}>{targetPct.toFixed(1)}% من الهدف</span>
+              }}>{targetPct.toFixed(1)}% of Target</span>
             </div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-label">إجمالي الإنتاج (Perso)</div>
+            <div className="kpi-label">Total Produced (Perso)</div>
             <div className="kpi-value">{totalBoards}</div>
           </div>
           <div className="kpi-card">
@@ -105,16 +105,16 @@ export default function StaffDashboard({ employees, stations, latestReport }) {
 
       {!latestReport && (
         <div className="card" style={{ textAlign: 'center', padding: 20, color: 'var(--text2)' }}>
-          لم يتم رفع تقرير إنتاج بعد.
+          No production report uploaded yet.
         </div>
       )}
 
       {/* Today's Production Pipeline */}
       {isConfigured ? (
         <div className="card" style={{ background: 'var(--bg)', border: 'none', boxShadow: 'none', padding: 0 }}>
-          <div className="card-title" style={{ fontSize: 18, marginBottom: 5 }}>🏭 محطات خط الإنتاج ({todayName})</div>
+          <div className="card-title" style={{ fontSize: 18, marginBottom: 5 }}>🏭 Production Line ({todayName})</div>
           <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 16 }}>
-            توزيع الموظفين على محطات الإنتاج بناءً على نظام التدوير الآلي لليوم الحالي.
+            Employee distribution on production stations based on the automated rotation system.
           </p>
 
           <div className="pipeline-container">
@@ -131,7 +131,7 @@ export default function StaffDashboard({ employees, stations, latestReport }) {
                   
                   <div className="station-card-body">
                     {empIds.length === 0 ? (
-                      <div className="empty-station">لا يوجد موظفين في هذه المحطة اليوم.</div>
+                      <div className="empty-station">No employees assigned to this station today.</div>
                     ) : (
                       empIds.map((empId) => {
                         const emp = employees.find((e) => e.empId === empId)
@@ -156,7 +156,7 @@ export default function StaffDashboard({ employees, stations, latestReport }) {
         </div>
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: 30, color: 'var(--text2)' }}>
-          لم يتم إعداد جدول التدوير بعد. اذهب إلى "نظام التدوير" لإعداده.
+          Rotation system is not configured yet. Go to "Rotation" to set it up.
         </div>
       )}
     </section>

@@ -30,7 +30,7 @@ body {
 
 .sidebar {
   width: 230px;
-  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   background: var(--bg2);
   padding: 18px 12px;
   display: flex;
@@ -57,7 +57,7 @@ body {
 
 .nav-item {
   width: 100%;
-  text-align: right;
+  text-align: left;
   border: 1px solid transparent;
   background: transparent;
   color: #2a446e;

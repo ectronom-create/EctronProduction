@@ -24,12 +24,12 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
 
   function handleSave() {
     if (!form.name.trim() || !form.empId.trim()) {
-      setFormErr('⚠ الاسم والرقم الوظيفي مطلوبان')
+      setFormErr('⚠ Name and Employee ID are required')
       return
     }
     const dup = employees.findIndex((e, i) => e.empId === form.empId.trim() && i !== editIdx)
     if (dup !== -1) {
-      setFormErr('⚠ الرقم الوظيفي مستخدم بالفعل')
+      setFormErr('⚠ Employee ID already in use')
       return
     }
     const updated = [...employees]
@@ -49,7 +49,7 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
   }
 
   function handleDelete(i) {
-    if (!window.confirm(`هل تريد حذف "${employees[i].name}"؟`)) return
+    if (!window.confirm(`Do you want to delete "${employees[i].name}"?`)) return
     const updated = employees.filter((_, idx) => idx !== i)
     onSave(updated)
   }
@@ -61,49 +61,49 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
     <section className="section">
       <div className="toolbar">
         <div>
-          <h2>سجل الموظفين</h2>
-          <p className="kpi-sub" style={{ marginTop: 2 }}>إدارة بيانات موظفي خط الإنتاج</p>
+          <h2>Employee Directory</h2>
+          <p className="kpi-sub" style={{ marginTop: 2 }}>Manage production line employee data</p>
         </div>
         <button className="btn primary" type="button" onClick={openAdd}>
-          + إضافة موظف
+          + Add Employee
         </button>
       </div>
 
       {/* Stats */}
       <div className="kpi-grid" style={{ marginBottom: 18 }}>
         <div className="kpi-card">
-          <div className="kpi-label">إجمالي الموظفين</div>
+          <div className="kpi-label">Total Employees</div>
           <div className="kpi-value">{employees.length}</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-label">نشطون في الجدول</div>
+          <div className="kpi-label">Active in Schedule</div>
           <div className="kpi-value" style={{ color: 'var(--green)' }}>{employees.length}</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-label">المحطات المعرّفة</div>
+          <div className="kpi-label">Defined Stations</div>
           <div className="kpi-value" style={{ color: 'var(--amber)' }}>{stationCount}</div>
         </div>
       </div>
 
       {/* Table */}
       <div className="card">
-        <div className="card-title">قائمة الموظفين</div>
+        <div className="card-title">Employee List</div>
         <div className="table-wrap">
           <table className="data-table">
             <thead>
               <tr>
-                <th>الموظف</th>
-                <th>الرقم الوظيفي</th>
-                <th>الهاتف</th>
-                <th>البريد الإلكتروني</th>
-                <th>الإجراءات</th>
+                <th>Employee</th>
+                <th>Employee ID</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {employees.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text2)', padding: 30 }}>
-                    لا يوجد موظفون. اضغط "إضافة موظف" للبدء.
+                    No employees yet. Click "Add Employee" to start.
                   </td>
                 </tr>
               )}
@@ -120,8 +120,8 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
                   <td style={{ color: 'var(--text2)', fontSize: 13 }}>{e.email || '—'}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn" type="button" onClick={() => openEdit(i)}>تعديل</button>
-                      <button className="btn danger" type="button" onClick={() => handleDelete(i)}>حذف</button>
+                      <button className="btn" type="button" onClick={() => openEdit(i)}>Edit</button>
+                      <button className="btn danger" type="button" onClick={() => handleDelete(i)}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -135,19 +135,19 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title">{editIdx === -1 ? 'إضافة موظف جديد' : 'تعديل بيانات الموظف'}</div>
+            <div className="modal-title">{editIdx === -1 ? 'Add New Employee' : 'Edit Employee Details'}</div>
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">الاسم الكامل *</label>
+                <label className="form-label">Full Name *</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="الاسم الكامل"
+                  placeholder="Full Name"
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">الرقم الوظيفي *</label>
+                <label className="form-label">Employee ID *</label>
                 <input
                   type="text"
                   value={form.empId}
@@ -156,7 +156,7 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">رقم الهاتف</label>
+                <label className="form-label">Phone Number</label>
                 <input
                   type="tel"
                   value={form.phone}
@@ -165,7 +165,7 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">البريد الإلكتروني</label>
+                <label className="form-label">Email Address</label>
                 <input
                   type="email"
                   value={form.email}
@@ -176,8 +176,8 @@ export default function EmployeesPage({ employees, onSave, stationCount }) {
             </div>
             {formErr && <div style={{ color: 'var(--red)', fontSize: 12, marginBottom: 8 }}>{formErr}</div>}
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
-              <button className="btn" type="button" onClick={() => setModalOpen(false)}>إلغاء</button>
-              <button className="btn primary" type="button" onClick={handleSave}>حفظ</button>
+              <button className="btn" type="button" onClick={() => setModalOpen(false)}>Cancel</button>
+              <button className="btn primary" type="button" onClick={handleSave}>Save</button>
             </div>
           </div>
         </div>

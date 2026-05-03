@@ -27,13 +27,13 @@ const MAX_FILE_SIZE_MB = 20
 const DAILY_TARGET_DEFAULT = 320
 
 const tabs = [
-  { id: 'dashboard', label: 'لوحة التحكم' },
-  { id: 'upload', label: 'رفع تقرير' },
-  { id: 'history', label: 'سجل التقارير' },
-  { id: 'trend', label: 'الاتجاهات' },
-  { id: 'employees', label: 'الموظفون' },
-  { id: 'rotation', label: 'نظام التدوير' },
-  { id: 'staff', label: 'داشبورد الموظفين' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'upload', label: 'Upload' },
+  { id: 'history', label: 'History' },
+  { id: 'trend', label: 'Trends' },
+  { id: 'employees', label: 'Employees' },
+  { id: 'rotation', label: 'Rotation' },
+  { id: 'staff', label: 'Staff View' },
 ]
 
 function fmtPct(value, digits = 2) {
@@ -507,12 +507,12 @@ function App() {
           </button>
         ))}
 
-        <div className="sidebar-bottom">{reports.length} تقرير — {rotEmployees.length} موظف</div>
+        <div className="sidebar-bottom">{reports.length} Reports — {rotEmployees.length} Employees</div>
       </aside>
 
       <main className="main">
         <header className="topbar">
-          <h1>لوحة تقارير الإنتاج FPY</h1>
+          <h1>FPY Production Dashboard</h1>
           <div className="topbar-meta">
             React + Supabase + Excel Parser
           </div>
@@ -528,7 +528,7 @@ function App() {
 
         {activeTab === 'upload' && (
           <section className="section">
-            <h2>رفع تقرير Excel</h2>
+            <h2>Upload Excel Report</h2>
             <div className="upload-row">
               <input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
               <input
@@ -546,20 +546,20 @@ function App() {
                 disabled={loading || saving || !(Number(uploadTarget) > 0)}
               />
             </div>
-            <p className="kpi-sub">يجب إدخال Target أولًا ثم اختيار ملف التقرير.</p>
+            <p className="kpi-sub">You must enter a Target first, then select a report file.</p>
 
-            {loading && <p>جار قراءة الملف...</p>}
+            {loading && <p>Reading file...</p>}
 
             {parsedData && (
               <div className="card">
-                <div className="card-title">معاينة قبل الحفظ: {parsedData.product} (ورقة: {parsedData.sheetName})</div>
+                <div className="card-title">Preview: {parsedData.product} (Sheet: {parsedData.sheetName})</div>
                 <div className="kpi-grid">
                   <div className="kpi-card">
                     <div className="kpi-label">OVERALL FPY</div>
                     <div className="kpi-value">{fmtPct(parsedData.overallFPY)}</div>
                   </div>
                   <div className="kpi-card">
-                    <div className="kpi-label">إجمالي الإنتاج المنجز (Perso)</div>
+                    <div className="kpi-label">Total Produced (Perso)</div>
                     <div className="kpi-value">{parsedData.totalBoards}</div>
                   </div>
                   <div className="kpi-card">
@@ -569,7 +569,7 @@ function App() {
                 </div>
 
                 <button type="button" className="btn primary" onClick={onSaveReport} disabled={saving}>
-                  {saving ? 'جار الحفظ...' : 'حفظ في Supabase'}
+                  {saving ? 'Saving...' : 'Save to Supabase'}
                 </button>
               </div>
             )}
@@ -579,25 +579,25 @@ function App() {
         {activeTab === 'dashboard' && (
           <section className="section">
             <div className="toolbar">
-              <h2>لوحة التحكم</h2>
+              <h2>Dashboard</h2>
             </div>
 
-            {loading && <p>جار التحميل...</p>}
-            {!loading && !selectedReport && <p>لا يوجد تقارير بعد. اذهب إلى صفحة الرفع.</p>}
+            {loading && <p>Loading...</p>}
+            {!loading && !selectedReport && <p>No reports yet. Go to Upload.</p>}
 
             {selectedReport && (
               <>
 
 
                 <div className="card">
-                  <div className="card-title">تحليلات ذكية حسب الفترة</div>
+                  <div className="card-title">Period Analytics</div>
                   <div className="smart-row">
                     <select value={smartPeriod} onChange={(e) => setSmartPeriod(e.target.value)}>
-                      <option value="day">اليوم</option>
-                      <option value="week">آخر 7 أيام</option>
-                      <option value="month">هذا الشهر</option>
-                      <option value="customMonth">شهر معيّن</option>
-                      <option value="custom">فترة مخصصة</option>
+                      <option value="day">Today</option>
+                      <option value="week">Last 7 Days</option>
+                      <option value="month">This Month</option>
+                      <option value="customMonth">Specific Month</option>
+                      <option value="custom">Custom Range</option>
                     </select>
 
                     {smartPeriod === 'customMonth' && (
@@ -612,52 +612,52 @@ function App() {
                     )}
 
                     <span className="tag">
-                      الفترة: {rangeFrom} → {rangeTo}
+                      Period: {rangeFrom} → {rangeTo}
                     </span>
                   </div>
 
                   <div className="kpi-grid">
                     <div className="kpi-card">
-                      <div className="kpi-label">عدد التقارير</div>
+                      <div className="kpi-label">Report Count</div>
                       <div className="kpi-value">{smartStats.cur.count}</div>
-                      <div className="kpi-sub">مقارنةً بالسابق: {smartStats.prev.count}</div>
+                      <div className="kpi-sub">vs previous: {smartStats.prev.count}</div>
                     </div>
                     <div className="kpi-card">
-                      <div className="kpi-label">متوسط FPY</div>
+                      <div className="kpi-label">Average FPY</div>
                       <div className="kpi-value">{fmtPct(smartStats.cur.avgFPY, 2)}</div>
                       <div className="kpi-sub">
-                        {smartStats.fpyDelta === null ? 'لا توجد مقارنة' : `فرق عن الفترة السابقة: ${smartStats.fpyDelta >= 0 ? '+' : ''}${smartStats.fpyDelta.toFixed(2)}%`}
+                        {smartStats.fpyDelta === null ? 'No comparison' : `Diff from previous: ${smartStats.fpyDelta >= 0 ? '+' : ''}${smartStats.fpyDelta.toFixed(2)}%`}
                       </div>
                     </div>
                     <div className="kpi-card">
-                      <div className="kpi-label">إجمالي الإنتاج المنجز (Perso)</div>
+                      <div className="kpi-label">Total Produced (Perso)</div>
                       <div className="kpi-value">{smartStats.cur.sumBoards}</div>
                       <div className="kpi-sub">
-                        فرق عن السابق: {smartStats.boardsDelta >= 0 ? '+' : ''}
+                        Diff from previous: {smartStats.boardsDelta >= 0 ? '+' : ''}
                         {smartStats.boardsDelta}
                       </div>
                     </div>
                     <div className="kpi-card">
-                      <div className="kpi-label">أفضل / أسوأ يوم (FPY)</div>
+                      <div className="kpi-label">Best / Worst Day (FPY)</div>
                       <div className="kpi-sub">
-                        أفضل: {smartStats.cur.best ? `${smartStats.cur.best.date} (${smartStats.cur.best.value.toFixed(1)}%)` : '—'}
+                        Best: {smartStats.cur.best ? `${smartStats.cur.best.date} (${smartStats.cur.best.value.toFixed(1)}%)` : '—'}
                       </div>
                       <div className="kpi-sub">
-                        أسوأ: {smartStats.cur.worst ? `${smartStats.cur.worst.date} (${smartStats.cur.worst.value.toFixed(1)}%)` : '—'}
+                        Worst: {smartStats.cur.worst ? `${smartStats.cur.worst.date} (${smartStats.cur.worst.value.toFixed(1)}%)` : '—'}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <label style={{ fontWeight: 'bold', margin: 0, minWidth: '120px' }}>عرض تفاصيل التقرير:</label>
+                  <label style={{ fontWeight: 'bold', margin: 0, minWidth: '120px' }}>Select Report:</label>
                   <select 
                     value={selectedId} 
                     onChange={(e) => setSelectedId(e.target.value)} 
                     disabled={reports.length === 0}
                     style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '1rem' }}
                   >
-                    {reports.length === 0 && <option value="">لا يوجد تقارير</option>}
+                    {reports.length === 0 && <option value="">No reports</option>}
                     {reports.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.date} - {r.product}
@@ -667,7 +667,7 @@ function App() {
                 </div>
 
                 <div className="target-bar">
-                  <label htmlFor="targetInput">Target لهذا التقرير (لوحات)</label>
+                  <label htmlFor="targetInput">Target for this report (Boards)</label>
                   <input
                     id="targetInput"
                     type="number"
@@ -676,24 +676,24 @@ function App() {
                     onChange={(e) => setDailyTarget(e.target.value)}
                   />
                   <span className={`tag ${getComparisonColor(targetComparison.multiTestPct)}`}>
-                    التقدم (Multi-TEST كنهائي): {targetComparison.multiTestPct.toFixed(1)}%
+                    Progress (Multi-TEST as final): {targetComparison.multiTestPct.toFixed(1)}%
                   </span>
                 </div>
 
                 <div className="kpi-grid">
                   <div className="kpi-card">
-                    <div className="kpi-label">الهدف (Target)</div>
+                    <div className="kpi-label">Target</div>
                     <div className="kpi-value">{targetComparison.target}</div>
                   </div>
                   <div className="kpi-card">
-                    <div className="kpi-label">إنتاج Multi-TEST (النهائي)</div>
+                    <div className="kpi-label">Multi-TEST Production (Final)</div>
                     <div className="kpi-value">{targetComparison.multiTestOK}</div>
-                    <div className={`kpi-sub tag ${getComparisonColor(targetComparison.multiTestPct)}`} style={{marginTop: '8px', display: 'inline-block'}}>تحقيق: {targetComparison.multiTestPct.toFixed(1)}%</div>
+                    <div className={`kpi-sub tag ${getComparisonColor(targetComparison.multiTestPct)}`} style={{marginTop: '8px', display: 'inline-block'}}>Achieved: {targetComparison.multiTestPct.toFixed(1)}%</div>
                   </div>
                   <div className="kpi-card">
-                    <div className="kpi-label">إنتاج Assembly</div>
+                    <div className="kpi-label">Assembly Production</div>
                     <div className="kpi-value">{targetComparison.assemblyOK}</div>
-                    <div className="kpi-sub" style={{marginTop: '8px'}}>تحقيق: {targetComparison.assemblyPct.toFixed(1)}%</div>
+                    <div className="kpi-sub" style={{marginTop: '8px'}}>Achieved: {targetComparison.assemblyPct.toFixed(1)}%</div>
                   </div>
                   <div className="kpi-card">
                     <div className="kpi-label">OVERALL FPY</div>
@@ -703,16 +703,16 @@ function App() {
 
                 <div className="charts-grid">
                   <div className="card">
-                    <div className="card-title">جدول تحليل مراحل الإنتاج (الداخل، الخارج، الأخطاء، ونسبة FPY)</div>
+                    <div className="card-title">Production Stages Analysis (In, Out, Errors, FPY%)</div>
                     <div className="table-wrap">
                       <table className="data-table">
                         <thead>
                           <tr>
-                            <th>المرحلة (Product Name)</th>
-                            <th>دخل (Nb boards)</th>
-                            <th>معدّي / خرج (Nb Boards OK)</th>
-                            <th>الأخطاء (دخل - خرج)</th>
-                            <th>نسبة النجاح (FPY)</th>
+                            <th>Stage (Product Name)</th>
+                            <th>In (Nb boards)</th>
+                            <th>Passed (Nb Boards OK)</th>
+                            <th>Errors (In - Out)</th>
+                            <th>Success Rate (FPY)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -735,7 +735,7 @@ function App() {
                   </div>
 
                   <div className="card">
-                    <div className="card-title">دخل مقابل أخطاء مقابل معدّي (لكل خطوة)</div>
+                    <div className="card-title">Input vs Errors vs Passed (Per Step)</div>
                     <div className="chart-wrap">
                       <Bar
                         data={flowChartData}
@@ -759,13 +759,13 @@ function App() {
         {activeTab === 'history' && (
           <section className="section">
             <div className="toolbar">
-              <h2>سجل التقارير</h2>
+              <h2>Report History</h2>
               <button type="button" className="btn danger" onClick={onClearAll} disabled={reports.length === 0}>
-                حذف الكل
+                Clear All
               </button>
             </div>
 
-            {reports.length === 0 && <p>لا يوجد سجل حتى الآن.</p>}
+            {reports.length === 0 && <p>No history yet.</p>}
             {reports.map((r) => {
               const rowBottleneck = [...(r.stations || [])].filter((s) => s.fpy !== null).sort((a, b) => a.fpy - b.fpy)[0]
               return (
@@ -776,16 +776,16 @@ function App() {
                   </div>
                   <div className="history-stats">
                     <span>FPY: {fmtPct(r.overallFPY, 1)}</span>
-                    <span>المنجز: {r.totalBoards}</span>
+                    <span>Produced: {r.totalBoards}</span>
                     <span>OK: {r.achieved}</span>
                     <span>Bottleneck: {rowBottleneck ? fmtPct(rowBottleneck.fpy, 1) : 'N/A'}</span>
                   </div>
                   <div className="history-actions">
                     <button type="button" className="btn" onClick={() => { setSelectedId(String(r.id)); setActiveTab('dashboard') }}>
-                      عرض
+                      View
                     </button>
                     <button type="button" className="btn danger" onClick={() => onDeleteReport(r.id)}>
-                      حذف
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -796,18 +796,18 @@ function App() {
 
         {activeTab === 'trend' && (
           <section className="section">
-            <h2>الاتجاهات</h2>
-            {reports.length < 2 && <p>أضف تقريرين أو أكثر لعرض الاتجاهات بشكل مفيد.</p>}
+            <h2>Trends</h2>
+            {reports.length < 2 && <p>Add two or more reports to see trends.</p>}
 
             <div className="card">
-              <div className="card-title">FPY عبر الأيام</div>
+              <div className="card-title">FPY Over Time</div>
               <div className="chart-wrap large">
                 <Line data={trendData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} />
               </div>
             </div>
 
             <div className="card">
-              <div className="card-title">إجمالي الإنتاج المنجز عبر الأيام</div>
+              <div className="card-title">Total Production Over Time</div>
               <div className="chart-wrap medium">
                 <Bar data={boardsTrendData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} />
               </div>

@@ -8,7 +8,7 @@ const BASE_KEY = 'prs_base'      // Master assignment (one-time)
 const START_KEY = 'prs_start'    // Start date of rotation
 const SHIFT_KEY = 'prs_shift'    // Shift amount (1 or 2)
 
-const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس']
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']
 
 /* ── Date helpers (LOCAL timezone safe) ── */
 function toLocalISO(d) {
@@ -180,7 +180,7 @@ export function getWeekDates(sundayISO) {
  */
 export function formatDateShort(iso) {
   const d = parseLocalDate(iso)
-  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   return `${d.getDate()} ${months[d.getMonth()]}`
 }
 

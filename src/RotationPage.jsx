@@ -215,22 +215,22 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
     <section className="section">
       <div className="toolbar">
         <div>
-          <h2>نظام توزيع وتدوير الموظفين</h2>
-          <p className="kpi-sub" style={{ marginTop: 2 }}>عيّن الموظفين مرة واحدة — والجدول يستمر تلقائياً حسب التاريخ</p>
+          <h2>Staff Distribution & Rotation System</h2>
+          <p className="kpi-sub" style={{ marginTop: 2 }}>Assign employees once — the schedule continues automatically by date</p>
         </div>
-        <button className="btn primary" type="button" onClick={openAddStation}>+ إضافة محطة</button>
+        <button className="btn primary" type="button" onClick={openAddStation}>+ Add Station</button>
       </div>
 
       {/* Station chips */}
       <div className="card">
         <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>المحطات ({stations.length})</span>
+          <span>Stations ({stations.length})</span>
           <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--text2)' }}>
-            الموظفون: <strong style={{ color: 'var(--green)' }}>{employees.length}</strong>
+            Employees: <strong style={{ color: 'var(--green)' }}>{employees.length}</strong>
           </span>
         </div>
         {stations.length === 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--text2)', padding: 20 }}>لم تُعرَّف محطات بعد. اضغط "إضافة محطة".</p>
+          <p style={{ textAlign: 'center', color: 'var(--text2)', padding: 20 }}>No stations defined yet. Click "Add Station".</p>
         )}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {stations.map((st, i) => {
@@ -244,7 +244,7 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
                 {st.name}
                 <button type="button" onClick={() => deleteStation(i)} style={{
                   background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 15, padding: 0, lineHeight: 1, marginRight: 4,
-                }} title="حذف">×</button>
+                }} title="Delete">×</button>
               </div>
             )
           })}
@@ -254,13 +254,13 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
       {/* Base Assignment — one-time setup */}
       {stations.length > 0 && employees.length > 0 && !isConfigured && (
         <div className="card" style={{ borderColor: 'rgba(201,160,23,.4)', background: 'rgba(201,160,23,.04)' }}>
-          <div className="card-title" style={{ color: 'var(--amber)' }}>⚙ إعداد التوزيع الأساسي (مرة واحدة)</div>
+          <div className="card-title" style={{ color: 'var(--amber)' }}>⚙ Base Assignment Setup (One-time)</div>
           <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>
-            عيّن كل موظف على محطته، ثم اضغط "تفعيل التدوير". سيبدأ النظام بتدوير الموظفين تلقائياً من هذا التاريخ.
+            Assign each employee to their station, then click "Activate Rotation". The system will rotate automatically from this date.
           </p>
           <div className="table-wrap">
             <table className="data-table">
-              <thead><tr><th>المحطة</th><th>الموظفون المعيّنون</th></tr></thead>
+              <thead><tr><th>Station</th><th>Assigned Employees</th></tr></thead>
               <tbody>
                 {stations.map((st, si) => {
                   const col = COLORS[si % COLORS.length]
@@ -284,19 +284,19 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-              <span style={{ color: 'var(--text2)' }}>الإزاحة اليومية:</span>
+              <span style={{ color: 'var(--text2)' }}>Daily Shift:</span>
               <select value={shiftAmount} onChange={(e) => handleShiftChange(Number(e.target.value))} style={{ padding: '3px 8px', borderRadius: 8 }}>
-                <option value={1}>شخص واحد</option>
-                <option value={2}>شخصان</option>
-                <option value={3}>ثلاثة</option>
+                <option value={1}>1 Person</option>
+                <option value={2}>2 Persons</option>
+                <option value={3}>3 Persons</option>
               </select>
             </div>
             <button className="btn" type="button" onClick={activateRotation}
               disabled={totalAssigned === 0}
               style={{ background: totalAssigned > 0 ? 'var(--green)' : undefined, color: totalAssigned > 0 ? '#fff' : undefined, borderColor: totalAssigned > 0 ? 'var(--green)' : undefined }}>
-              ✓ تفعيل التدوير
+              ✓ Activate Rotation
             </button>
-            <span className="tag" style={{ fontSize: 11 }}>معيّنون: <strong>{totalAssigned}</strong> / {employees.length}</span>
+            <span className="tag" style={{ fontSize: 11 }}>Assigned: <strong>{totalAssigned}</strong> / {employees.length}</span>
           </div>
         </div>
       )}
@@ -305,18 +305,18 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
       {isConfigured && (
         <div className="card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div style={{ fontSize: 13 }}>
-            <span style={{ color: 'var(--green)', fontWeight: 700 }}>✓ التدوير مفعّل</span>
-            <span style={{ color: 'var(--text2)', marginRight: 8 }}>منذ {formatDateShort(startDate)}</span>
-            <span style={{ color: 'var(--text2)' }}> — إزاحة: {shiftAmount === 1 ? 'شخص واحد' : shiftAmount === 2 ? 'شخصان' : `${shiftAmount}`} / يوم</span>
+            <span style={{ color: 'var(--green)', fontWeight: 700 }}>✓ Rotation Active</span>
+            <span style={{ color: 'var(--text2)', marginRight: 8 }}> since {formatDateShort(startDate)}</span>
+            <span style={{ color: 'var(--text2)' }}> — Shift: {shiftAmount === 1 ? '1 Person' : shiftAmount === 2 ? '2 Persons' : `${shiftAmount} Persons`} / Day</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button className="btn" type="button" onClick={() => { setStartDate(''); saveStartDate('') }} style={{ fontSize: 12, padding: '4px 10px' }}>
-              ✏ تعديل التوزيع
+              ✏ Edit Assignment
             </button>
             <select value={shiftAmount} onChange={(e) => handleShiftChange(Number(e.target.value))} style={{ padding: '3px 8px', borderRadius: 8, fontSize: 12 }}>
-              <option value={1}>إزاحة: 1</option>
-              <option value={2}>إزاحة: 2</option>
-              <option value={3}>إزاحة: 3</option>
+              <option value={1}>Shift: 1</option>
+              <option value={2}>Shift: 2</option>
+              <option value={3}>Shift: 3</option>
             </select>
           </div>
         </div>
@@ -326,14 +326,14 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
       {isConfigured && (
         <div className="card">
           <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <span>جدول الأسبوع</span>
+            <span>Weekly Schedule</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button className="btn" type="button" onClick={() => setWeekOffset(weekOffset - 1)} style={{ padding: '3px 10px' }}>→ سابق</button>
+              <button className="btn" type="button" onClick={() => setWeekOffset(weekOffset - 1)} style={{ padding: '3px 10px' }}>Previous</button>
               <button className="btn" type="button" onClick={() => setWeekOffset(0)}
                 style={{ padding: '3px 10px', fontWeight: weekOffset === 0 ? 700 : 400, color: weekOffset === 0 ? 'var(--blue)' : undefined }}>
-                الحالي
+                Current
               </button>
-              <button className="btn" type="button" onClick={() => setWeekOffset(weekOffset + 1)} style={{ padding: '3px 10px' }}>تالي ←</button>
+              <button className="btn" type="button" onClick={() => setWeekOffset(weekOffset + 1)} style={{ padding: '3px 10px' }}>Next</button>
               <button className="btn" type="button" onClick={() => window.print()} style={{ fontSize: 12, padding: '3px 10px' }}>🖨</button>
             </div>
           </div>
@@ -342,7 +342,7 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ minWidth: 100 }}>المحطة</th>
+                  <th style={{ minWidth: 100 }}>Station</th>
                   {DAYS.map((d, di) => {
                     const isToday = weekDates[di] === todayISO
                     return (
@@ -392,7 +392,7 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
 
       {stations.length > 0 && employees.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: 30, color: 'var(--text2)' }}>
-          أضف موظفين أولاً من صفحة "الموظفون".
+          Add employees first from the "Employees" page.
         </div>
       )}
 
@@ -400,16 +400,16 @@ export default function RotationPage({ employees, stations, onSaveStations }) {
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title">إضافة محطة إنتاج</div>
+            <div className="modal-title">Add Production Station</div>
             <div className="form-group">
-              <label className="form-label">اسم المحطة *</label>
+              <label className="form-label">Station Name *</label>
               <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
-                placeholder="مثال: Assembly" onKeyDown={(e) => e.key === 'Enter' && handleSaveStation()} />
+                placeholder="e.g., Assembly" onKeyDown={(e) => e.key === 'Enter' && handleSaveStation()} />
             </div>
             {formErr && <div style={{ color: 'var(--red)', fontSize: 12, marginTop: 8 }}>{formErr}</div>}
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
-              <button className="btn" type="button" onClick={() => setModalOpen(false)}>إلغاء</button>
-              <button className="btn primary" type="button" onClick={handleSaveStation}>إضافة</button>
+              <button className="btn" type="button" onClick={() => setModalOpen(false)}>Cancel</button>
+              <button className="btn primary" type="button" onClick={handleSaveStation}>Add</button>
             </div>
           </div>
         </div>
