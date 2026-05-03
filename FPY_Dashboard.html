@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم FPY — الإنتاج</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #222536;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --text2: #8b90a0;
+    --text3: #5a5f70;
+    --green: #22c98a;
+    --green-bg: rgba(34,201,138,0.1);
+    --amber: #f5a623;
+    --amber-bg: rgba(245,166,35,0.1);
+    --red: #f04b4b;
+    --red-bg: rgba(240,75,75,0.1);
+    --blue: #4b8ef0;
+    --blue-bg: rgba(75,142,240,0.1);
+    --purple: #9b6af7;
+    --purple-bg: rgba(155,106,247,0.1);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Arial, sans-serif; min-height: 100vh; font-size: 14px; }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: var(--bg2); border-left: 1px solid var(--border); padding: 20px 0; flex-shrink: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .main { flex: 1; overflow-x: hidden; min-width: 0; }
+
+  /* SIDEBAR */
+  .logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .logo-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.15s; border-right: 3px solid transparent; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--bg3); color: var(--green); border-right-color: var(--green); }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .nav-section { padding: 12px 20px 6px; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+  .sidebar-bottom { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
+  .db-status { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+  .db-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+  /* TOPBAR */
+  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .topbar-title { font-size: 15px; font-weight: 600; }
+  .topbar-meta { font-size: 12px; color: var(--text3); }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg3); color: var(--text); cursor: pointer; font-size: 13px; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { background: var(--bg); border-color: var(--border2); }
+  .btn-primary { background: var(--green); color: #0a1a12; border-color: var(--green); font-weight: 600; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-danger { background: var(--red-bg); color: var(--red); border-color: rgba(240,75,75,0.3); }
+  .btn-danger:hover { background: rgba(240,75,75,0.18); }
+
+  /* PAGES */
+  .page { display: none; padding: 24px; }
+  .page.active { display: block; }
+
+  /* UPLOAD AREA */
+  .upload-hero { text-align: center; padding: 60px 20px; }
+  .upload-hero h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .upload-hero p { color: var(--text2); font-size: 14px; margin-bottom: 32px; line-height: 1.7; }
+  .drop-zone { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 48px 32px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg2); max-width: 520px; margin: 0 auto 24px; }
+  .drop-zone:hover, .drop-zone.drag { border-color: var(--green); background: rgba(34,201,138,0.05); }
+  .drop-icon { font-size: 40px; margin-bottom: 14px; }
+  .drop-title { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .drop-sub { font-size: 12px; color: var(--text3); }
+  .date-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .date-row label { font-size: 13px; color: var(--text2); }
+  .date-row input[type="date"] { padding: 8px 12px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 13px; }
+
+  /* PREVIEW */
+  .preview-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; max-width: 700px; margin: 0 auto 20px; }
+  .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .preview-title { font-size: 14px; font-weight: 600; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 500; }
+  .tag-green { background: var(--green-bg); color: var(--green); }
+  .tag-amber { background: var(--amber-bg); color: var(--amber); }
+  .tag-red { background: var(--red-bg); color: var(--red); }
+  .tag-blue { background: var(--blue-bg); color: var(--blue); }
+
+  /* CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .kpi-label { font-size: 11px; color: var(--text3); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.amber .kpi-value { color: var(--amber); }
+  .kpi-card.red .kpi-value { color: var(--red); }
+
+  /* TARGET BAR */
+  .target-bar { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .target-bar label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .target-bar input[type="number"] { width: 100px; padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 14px; font-weight: 600; }
+  .progress-wrap { flex: 1; min-width: 200px; }
+  .progress-top { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: var(--text2); }
+  .progress-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.4s; }
+  .progress-fill.amber { background: var(--amber); }
+  .progress-fill.red { background: var(--red); }
+
+  /* CHARTS */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .chart-label { font-size: 12px; color: var(--text3); margin-bottom: 14px; font-weight: 500; }
+  .chart-wrap { position: relative; }
+
+  /* TABLE */
+  .table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 24px; overflow: hidden; }
+  .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-title { font-size: 13px; font-weight: 600; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { padding: 10px 14px; text-align: right; font-size: 11px; color: var(--text3); background: var(--bg3); border-bottom: 1px solid var(--border); font-weight: 500; white-space: nowrap; }
+  .data-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; white-space: nowrap; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg3); }
+  .fpy-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .station-name { font-weight: 500; }
+  .station-bench { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* HISTORY */
+  .history-grid { display: grid; gap: 12px; }
+  .history-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; cursor: pointer; transition: border-color 0.15s; }
+  .history-item:hover { border-color: var(--border2); }
+  .history-date { font-size: 15px; font-weight: 600; }
+  .history-product { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .history-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+  .h-stat { text-align: center; }
+  .h-stat-val { font-size: 16px; font-weight: 700; }
+  .h-stat-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .history-actions { display: flex; gap: 8px; }
+
+  /* TREND CHART */
+  .trend-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; }
+
+  /* TOAST */
+  .toast-wrap { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 11px 18px; font-size: 13px; display: flex; align-items: center; gap: 10px; animation: fadeIn 0.2s; }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* LOADER */
+  .loader { display: none; text-align: center; padding: 60px; color: var(--text3); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-icon { font-size: 40px; margin-bottom: 14px; }
+
+  /* DEFECT BARS */
+  .defect-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .defect-code { font-size: 12px; color: var(--text2); width: 54px; text-align: left; font-family: monospace; }
+  .defect-track { flex: 1; height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .defect-fill { height: 100%; border-radius: 4px; }
+  .defect-qty { font-size: 12px; font-weight: 600; min-width: 30px; text-align: right; }
+
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px; }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+  .confirm-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; align-items: center; justify-content: center; }
+  .confirm-modal.show { display: flex; }
+  .confirm-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 28px; max-width: 380px; width: 90%; text-align: center; }
+  .confirm-box h3 { font-size: 16px; margin-bottom: 10px; }
+  .confirm-box p { color: var(--text2); font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
+  .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">تأكيد الحذف</h3>
+    <p id="confirmMsg">هل أنت متأكد؟</p>
+    <div class="confirm-btns">
+      <button class="btn btn-danger" onclick="confirmAction()">تأكيد</button>
+      <button class="btn" onclick="closeConfirm()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-title">⚡ FPY Dashboard</div>
+      <div class="logo-sub">إدارة تقارير الإنتاج</div>
+    </div>
+
+    <span class="nav-section">الرئيسية</span>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span> لوحة التحكم
+    </div>
+    <div class="nav-item" onclick="showPage('upload')" id="nav-upload">
+      <span class="nav-icon">📤</span> رفع تقرير
+    </div>
+
+    <span class="nav-section">البيانات</span>
+    <div class="nav-item" onclick="showPage('history')" id="nav-history">
+      <span class="nav-icon">📅</span> سجل التقارير
+    </div>
+    <div class="nav-item" onclick="showPage('trend')" id="nav-trend">
+      <span class="nav-icon">📈</span> الاتجاهات
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="db-status">
+        <div class="db-dot"></div>
+        <span id="dbStatusText">قاعدة البيانات محلية</span>
+      </div>
+      <div style="margin-top:8px; font-size:11px; color:var(--text3)" id="reportCountText">جاري التحميل...</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- =================== UPLOAD PAGE =================== -->
+    <div class="page active" id="page-upload">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">رفع تقرير جديد</div>
+          <div class="topbar-meta">اختر الملف وحدد تاريخ التقرير</div>
+        </div>
+      </div>
+
+      <div class="upload-hero">
+        <h2>رفع ملف Excel الإنتاج</h2>
+        <p>ارفع ملف تقرير FPY اليومي بصيغة .xls أو .xlsx<br>سيتم تحليل البيانات وحفظها تلقائياً في قاعدة البيانات</p>
+
+        <div class="date-row">
+          <label>📅 تاريخ التقرير:</label>
+          <input type="date" id="reportDate">
+          <button class="btn" onclick="document.getElementById('reportDate').value = new Date().toISOString().slice(0,10)">اليوم</button>
+        </div>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <div class="drop-icon">📂</div>
+          <div class="drop-title">اسحب الملف هنا أو اضغط للاختيار</div>
+          <div class="drop-sub">يدعم: .xls, .xlsx | حجم أقصى 20MB</div>
+          <input type="file" id="fileInput" accept=".xls,.xlsx" style="display:none" onchange="handleFileInput(this)">
+        </div>
+
+        <div id="parseLoader" class="loader">
+          <div class="spinner"></div>
+          <div>جاري قراءة وتحليل الملف...</div>
+        </div>
+
+        <div id="previewSection" style="display:none">
+          <div class="preview-card">
+            <div class="preview-header">
+              <div class="preview-title" id="previewTitle">معاينة البيانات</div>
+              <span class="tag tag-green" id="previewTag">✓ جاهز للحفظ</span>
+            </div>
+            <div class="kpi-grid" id="previewKpis" style="margin-bottom:16px;"></div>
+            <div style="overflow-x:auto">
+              <table class="data-table" id="previewTable">
+                <thead><tr>
+                  <th>المحطة</th><th>Nb Boards</th><th>OK</th><th>FPY</th><th>Top Defect</th>
+                </tr></thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
+              <button class="btn btn-primary" onclick="saveReport()">💾 حفظ في قاعدة البيانات</button>
+              <button class="btn" onclick="resetUpload()">↩ إلغاء</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== DASHBOARD PAGE =================== -->
+    <div class="page" id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">لوحة التحكم</div>
+          <div class="topbar-meta" id="dashMeta">آخر تقرير محمّل</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="btn" id="reportSelector" onchange="loadDashboard(this.value)" style="min-width:200px;">
+            <option>اختر تقريراً...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="dashLoader" class="loader"><div class="spinner"></div><div>جاري التحميل...</div></div>
+
+      <div id="dashContent" style="padding:24px; display:none;">
+
+        <div class="target-bar">
+          <label>🎯 الهدف اليومي (لوحات):</label>
+          <input type="number" id="targetInput" value="320" min="1" oninput="updateTarget()">
+          <div class="progress-wrap">
+            <div class="progress-top">
+              <span>التقدم نحو الهدف</span>
+              <span id="progressPct" style="font-weight:600">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-label">FPY لكل محطة — تحديد عنق الزجاجة</div>
+            <div class="chart-wrap" style="height:240px;">
+              <canvas id="fbyBarChart" role="img" aria-label="مخطط أعمدة FPY لكل محطة إنتاج"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-label">توزيع أبرز الأعطال (Top Defects)</div>
+            <div id="defectsViz"></div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <span class="table-title">تفاصيل المحطات</span>
+            <span class="tag tag-blue" id="stationsCount"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead><tr>
+                <th>المحطة</th><th>Nb Boards</th><th>1st Pass</th><th>Boards OK</th><th>مرفوضة</th><th>Nb Tests</th><th>FPY</th><th>NRY</th><th>Top 1 Defect</th><th>Qty</th>
+              </tr></thead>
+              <tbody id="stationsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="dashEmpty" class="empty-state" style="display:none;">
+        <div class="empty-icon">📋</div>
+        <p>لا توجد تقارير بعد<br><span style="font-size:13px">ارفع أول تقرير من صفحة "رفع تقرير"</span></p>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="showPage('upload')">📤 رفع تقرير</button>
+      </div>
+    </div>
+
+    <!-- =================== HISTORY PAGE =================== -->
+    <div class="page" id="page-history">
+      <div class="topbar">
+        <div class="topbar-title">سجل التقارير</div>
+        <div class="topbar-actions">
+          <button class="btn btn-danger" onclick="promptClearAll()">🗑 حذف الكل</button>
+        </div>
+      </div>
+      <div style="padding:24px;">
+        <div id="historyList" class="history-grid"></div>
+        <div id="historyEmpty" class="empty-state" style="display:none;">
+          <div class="empty-icon">📅</div>
+          <p>لا يوجد سجل تقارير حتى الآن</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== TREND PAGE =================== -->
+    <div class="page" id="page-trend">
+      <div class="topbar">
+        <div class="topbar-title">اتجاهات FPY عبر الزمن</div>
+      </div>
+      <div style="padding:24px;">
+        <div class="trend-section">
+          <div class="chart-label">FPY الإجمالي يومياً</div>
+          <div style="position:relative;height:280px;">
+            <canvas id="trendChart" role="img" aria-label="مخطط خطي يوضح تطور FPY يومياً"></canvas>
+          </div>
+        </div>
+        <div class="trend-section">
+          <div class="chart-label">إجمالي اللوحات المنتجة يومياً</div>
+          <div style="position:relative;height:220px;">
+            <canvas id="trendBoardsChart" role="img" aria-label="مخطط خطي يوضح إجمالي الإنتاج اليومي"></canvas>
+          </div>
+        </div>
+        <div id="trendEmpty" class="empty-state" style="display:none;">
+          <div class="empty-icon">📈</div>
+          <p>ارفع تقريرين أو أكثر لعرض الاتجاهات</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<script>
+// ===================== DB =====================
+const DB_NAME = 'FPY_DB';
+const DB_VERSION = 1;
+let db;
+
+function initDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('reports')) {
+        const store = db.createObjectStore('reports', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('date', 'date', { unique: true });
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror = e => rej(e.target.error);
+  });
+}
+
+function dbAdd(report) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('reports', 'readwrite');
+    const store = tx.objectStore('reports');
+    const req = store.add(report);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbPut(report) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('reports', 'readwrite');
+    const req = tx.objectStore('reports').put(report);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbGetAll() {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('reports', 'readonly');
+    const req = tx.objectStore('reports').getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbDelete(id) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('reports', 'readwrite');
+    const req = tx.objectStore('reports').delete(id);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbClear() {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('reports', 'readwrite');
+    const req = tx.objectStore('reports').clear();
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbGetByDate(date) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('reports', 'readonly');
+    const req = tx.objectStore('reports').index('date').get(date);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+// ===================== PARSER =====================
+function parseFPYExcel(arrayBuffer) {
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  // Use "Analysis by product" sheet
+  const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('product')) || wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+
+  // Find header row (contains "Nb boards")
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].some(c => c && String(c).includes('Nb boards'))) { headerIdx = i; break; }
+  }
+  if (headerIdx === -1) throw new Error('لم يتم العثور على هيكل البيانات المتوقع في الملف');
+
+  // Get product info from row above
+  let productInfo = '';
+  for (let i = 0; i < headerIdx; i++) {
+    const row = rows[i];
+    const cell = row.find(c => c && String(c).includes('Produit'));
+    if (cell) { productInfo = String(cell); break; }
+  }
+  const productMatch = productInfo.match(/Produit\s*:\s*([^>]+)/);
+  const product = productMatch ? productMatch[1].trim() : 'Unknown';
+
+  const stations = [];
+  const defectsMap = {};
+
+  // Parse data rows (after header, skip TOTAL row)
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row[1]) continue;
+    const nameCell = String(row[1]).trim();
+    if (nameCell.toUpperCase().includes('TOTAL')) continue;
+
+    const parsePct = v => {
+      if (v === null || v === undefined) return null;
+      const s = String(v).replace('%', '').trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? null : n;
+    };
+    const parseNum = v => { const n = parseInt(v); return isNaN(n) ? 0 : n; };
+    const parseDefect = v => v ? String(v).replace('>', '').trim() : null;
+
+    // Extract bench & station name
+    const parts = nameCell.split('|');
+    const bench = parts[0].trim();
+    const stationName = parts.length > 1 ? parts[1].trim() : bench;
+
+    const fpy = parsePct(row[9]);
+    const nry = parsePct(row[10]);
+
+    const top1 = parseDefect(row[13]);
+    const qty1 = parseNum(row[14]);
+    const top2 = parseDefect(row[16]);
+    const qty2 = parseNum(row[17]);
+    const top3 = parseDefect(row[19]);
+    const qty3 = parseNum(row[20]);
+
+    // Aggregate defects
+    [{ c: top1, q: qty1 }, { c: top2, q: qty2 }, { c: top3, q: qty3 }].forEach(({ c, q }) => {
+      if (c && q > 0) defectsMap[c] = (defectsMap[c] || 0) + q;
+    });
+
+    stations.push({
+      bench, stationName,
+      nbBoards: parseNum(row[2]),
+      nbFirstPass: parseNum(row[3]),
+      nbOkFirstPass: parseNum(row[4]),
+      nbBoardsOK: parseNum(row[6]),
+      nbTestRun: parseNum(row[8]),
+      fpy, nry,
+      top1, qty1, top2, qty2, top3, qty3
+    });
+  }
+
+  // Find assembly (final output)
+  const assemblyRow = stations.find(s => s.stationName.toLowerCase().includes('assembly'));
+  const totalBoards = stations.reduce((s, r) => s > r.nbBoards ? s : r.nbBoards, 0);
+  const achieved = assemblyRow ? assemblyRow.nbBoardsOK : 0;
+
+  // Overall FPY from TOTAL row
+  let overallFPY = null;
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row[1] && String(row[1]).includes('TOTAL')) {
+      overallFPY = parseFloat(String(row[9]).replace('%', '').trim()) || null;
+      break;
+    }
+  }
+
+  const defectsArr = Object.entries(defectsMap)
+    .map(([code, qty]) => ({ code, qty }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 8);
+
+  return { product, stations, defects: defectsArr, achieved, totalBoards, overallFPY };
+}
+
+// ===================== STATE =====================
+let parsedData = null;
+let currentReportId = null;
+let fbyChart = null;
+let trendChart = null;
+let trendBoardsChart = null;
+let confirmCallback = null;
+
+// ===================== UPLOAD =====================
+function handleFileInput(input) {
+  if (input.files[0]) processFile(input.files[0]);
+}
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+
+function processFile(file) {
+  if (!file.name.match(/\.xlsx?$/i)) { showToast('يرجى رفع ملف Excel (.xls أو .xlsx)', 'error'); return; }
+  document.getElementById('parseLoader').style.display = 'block';
+  document.getElementById('previewSection').style.display = 'none';
+  dropZone.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      parsedData = parseFPYExcel(e.target.result);
+      showPreview(parsedData);
+    } catch (err) {
+      showToast('خطأ في قراءة الملف: ' + err.message, 'error');
+      resetUpload();
+    } finally {
+      document.getElementById('parseLoader').style.display = 'none';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showPreview(data) {
+  document.getElementById('previewSection').style.display = 'block';
+  document.getElementById('previewTitle').textContent = data.product;
+
+  const kpiGrid = document.getElementById('previewKpis');
+  const bottleneck = [...data.stations].sort((a, b) => (a.fpy || 999) - (b.fpy || 999))[0];
+  kpiGrid.innerHTML = `
+    <div class="kpi-card green"><div class="kpi-label">OVERALL FPY</div><div class="kpi-value">${data.overallFPY !== null ? data.overallFPY.toFixed(2) + '%' : 'N/A'}</div></div>
+    <div class="kpi-card"><div class="kpi-label">إجمالي اللوحات</div><div class="kpi-value">${data.totalBoards}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Assembly OK</div><div class="kpi-value">${data.achieved}</div></div>
+    <div class="kpi-card ${bottleneck && bottleneck.fpy < 75 ? 'red' : 'amber'}"><div class="kpi-label">عنق الزجاجة</div><div class="kpi-value">${bottleneck ? bottleneck.fpy?.toFixed(1) + '%' : 'N/A'}</div><div class="kpi-sub">${bottleneck?.stationName || ''}</div></div>
+  `;
+
+  const tbody = document.getElementById('previewBody');
+  tbody.innerHTML = data.stations.map(s => `
+    <tr>
+      <td><span style="font-weight:500">${s.stationName}</span></td>
+      <td>${s.nbBoards}</td>
+      <td>${s.nbBoardsOK}</td>
+      <td><span class="fpy-badge ${fpyClass(s.fpy)}">${s.fpy !== null ? s.fpy.toFixed(2) + '%' : '—'}</span></td>
+      <td style="color:var(--text3); font-size:12px">${s.top1 || '—'}${s.qty1 > 0 ? ' (' + s.qty1 + ')' : ''}</td>
+    </tr>
+  `).join('');
+}
+
+async function saveReport() {
+  if (!parsedData) return;
+  const date = document.getElementById('reportDate').value;
+  if (!date) { showToast('يرجى تحديد تاريخ التقرير', 'error'); return; }
+
+  // Check duplicate
+  const existing = await dbGetByDate(date);
+  if (existing) {
+    promptConfirm(
+      'تقرير موجود بالفعل',
+      `يوجد تقرير لتاريخ ${date} بالفعل. هل تريد استبداله؟`,
+      async () => {
+        await dbPut({ ...parsedData, date, savedAt: new Date().toISOString(), id: existing.id });
+        showToast('✓ تم تحديث التقرير بنجاح', 'success');
+        afterSave();
+      }
+    );
+    return;
+  }
+
+  await dbAdd({ ...parsedData, date, savedAt: new Date().toISOString() });
+  showToast('✓ تم حفظ التقرير بنجاح في قاعدة البيانات', 'success');
+  afterSave();
+}
+
+function afterSave() {
+  parsedData = null;
+  resetUpload();
+  updateSidebar();
+  populateReportSelector();
+  showPage('dashboard');
+  setTimeout(() => loadLatestReport(), 300);
+}
+
+function resetUpload() {
+  parsedData = null;
+  document.getElementById('previewSection').style.display = 'none';
+  document.getElementById('parseLoader').style.display = 'none';
+  dropZone.style.display = 'block';
+  document.getElementById('fileInput').value = '';
+}
+
+// ===================== DASHBOARD =====================
+async function loadLatestReport() {
+  const all = await dbGetAll();
+  if (!all.length) {
+    document.getElementById('dashContent').style.display = 'none';
+    document.getElementById('dashEmpty').style.display = 'block';
+    document.getElementById('dashLoader').style.display = 'none';
+    return;
+  }
+  const sorted = all.sort((a, b) => b.date.localeCompare(a.date));
+  const sel = document.getElementById('reportSelector');
+  if (sel.value && sel.value !== 'اختر تقريراً...') {
+    renderDashboard(all.find(r => r.id === parseInt(sel.value)) || sorted[0]);
+  } else {
+    renderDashboard(sorted[0]);
+  }
+}
+
+async function loadDashboard(id) {
+  if (!id || id === 'اختر تقريراً...') return;
+  const all = await dbGetAll();
+  const report = all.find(r => r.id === parseInt(id));
+  if (report) renderDashboard(report);
+}
+
+function renderDashboard(report) {
+  currentReportId = report.id;
+  document.getElementById('dashLoader').style.display = 'none';
+  document.getElementById('dashEmpty').style.display = 'none';
+  document.getElementById('dashContent').style.display = 'block';
+  document.getElementById('dashMeta').textContent = `تقرير ${report.date} — ${report.product}`;
+
+  // Select in dropdown
+  const sel = document.getElementById('reportSelector');
+  for (let opt of sel.options) { if (opt.value == report.id) { sel.value = opt.value; break; } }
+
+  // Target
+  updateTarget(report);
+  document.getElementById('targetInput').oninput = () => updateTarget(report);
+
+  // KPI
+  const bottleneck = [...report.stations].filter(s => s.fpy !== null).sort((a, b) => a.fpy - b.fpy)[0];
+  const totalDefects = report.defects.reduce((s, d) => s + d.qty, 0);
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card green"><div class="kpi-label">OVERALL FPY</div><div class="kpi-value">${report.overallFPY !== null ? report.overallFPY.toFixed(2) + '%' : 'N/A'}</div><div class="kpi-sub">معدل المرور الأول</div></div>
+    <div class="kpi-card"><div class="kpi-label">إجمالي اللوحات</div><div class="kpi-value">${report.totalBoards}</div><div class="kpi-sub">دخلت الإنتاج</div></div>
+    <div class="kpi-card"><div class="kpi-label">Assembly OK</div><div class="kpi-value">${report.achieved}</div><div class="kpi-sub">الإنتاج الفعلي</div></div>
+    <div class="kpi-card ${bottleneck && bottleneck.fpy < 75 ? 'red' : 'amber'}"><div class="kpi-label">عنق الزجاجة</div><div class="kpi-value">${bottleneck ? bottleneck.fpy.toFixed(1) + '%' : 'N/A'}</div><div class="kpi-sub">${bottleneck?.stationName || ''}</div></div>
+    <div class="kpi-card"><div class="kpi-label">عدد المحطات</div><div class="kpi-value">${report.stations.length}</div><div class="kpi-sub">محطة اختبار</div></div>
+    <div class="kpi-card red"><div class="kpi-label">إجمالي الأعطال</div><div class="kpi-value">${totalDefects}</div><div class="kpi-sub">عطل مسجل</div></div>
+  `;
+
+  // FPY Bar Chart
+  if (fbyChart) fbyChart.destroy();
+  const stFpy = report.stations.filter(s => s.fpy !== null);
+  fbyChart = new Chart(document.getElementById('fbyBarChart'), {
+    type: 'bar',
+    data: {
+      labels: stFpy.map(s => s.stationName.length > 14 ? s.stationName.slice(0,14)+'…' : s.stationName),
+      datasets: [{
+        data: stFpy.map(s => s.fpy),
+        backgroundColor: stFpy.map(s => s.fpy >= 90 ? '#22c98a' : s.fpy >= 75 ? '#f5a623' : '#f04b4b'),
+        borderRadius: 5, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `FPY: ${c.parsed.y.toFixed(2)}%` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#8b90a0', font: { size: 11 }, maxRotation: 35 } },
+        y: { min: 0, max: 105, ticks: { callback: v => v + '%', color: '#8b90a0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  // Defects Viz
+  const defBar = document.getElementById('defectsViz');
+  defBar.innerHTML = '';
+  if (report.defects.length === 0) {
+    defBar.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px 0;">لا توجد أعطال مسجلة</div>';
+  } else {
+    const maxQ = Math.max(...report.defects.map(d => d.qty));
+    const colors = ['#f04b4b','#f5a623','#4b8ef0','#22c98a','#9b6af7','#e8759a','#5dd3c4','#f0c94b'];
+    report.defects.forEach((d, i) => {
+      const pct = Math.round((d.qty / maxQ) * 100);
+      defBar.innerHTML += `
+        <div class="defect-item">
+          <span class="defect-code">${d.code}</span>
+          <div class="defect-track"><div class="defect-fill" style="width:${pct}%;background:${colors[i % colors.length]}"></div></div>
+          <span class="defect-qty" style="color:${colors[i % colors.length]}">${d.qty}</span>
+        </div>`;
+    });
+  }
+
+  // Stations Table
+  document.getElementById('stationsCount').textContent = report.stations.length + ' محطات';
+  document.getElementById('stationsTable').innerHTML = report.stations.map(s => `
+    <tr>
+      <td><div class="station-name">${s.stationName}</div><div class="station-bench">${s.bench}</div></td>
+      <td>${s.nbBoards}</td>
+      <td>${s.nbFirstPass}</td>
+      <td>${s.nbBoardsOK}</td>
+      <td style="color:${s.nbBoards - s.nbBoardsOK > 0 ? 'var(--red)' : 'var(--text3)'}">${s.nbBoards - s.nbBoardsOK}</td>
+      <td>${s.nbTestRun}</td>
+      <td><span class="fpy-badge ${fpyClass(s.fpy)}">${s.fpy !== null ? s.fpy.toFixed(2) + '%' : '—'}</span></td>
+      <td style="color:var(--text3)">${s.nry !== null ? s.nry.toFixed(2) + '%' : '—'}</td>
+      <td style="font-size:12px;color:var(--text3)">${s.top1 ? s.top1 + (s.qty1 > 0 ? ' (' + s.qty1 + ')' : '') : '—'}</td>
+      <td></td>
+    </tr>
+  `).join('');
+}
+
+function updateTarget(report) {
+  const target = parseInt(document.getElementById('targetInput').value) || 1;
+  const achieved = report ? report.achieved : 0;
+  const pct = Math.min(((achieved / target) * 100), 150);
+  const pctDisplay = ((achieved / target) * 100).toFixed(1);
+  document.getElementById('progressPct').textContent = pctDisplay + '%';
+  const fill = document.getElementById('progressFill');
+  fill.style.width = Math.min(pct, 100) + '%';
+  fill.className = 'progress-fill' + (pct >= 95 ? '' : pct >= 75 ? ' amber' : ' red');
+}
+
+// ===================== HISTORY =====================
+async function loadHistory() {
+  const all = await dbGetAll();
+  const sorted = all.sort((a, b) => b.date.localeCompare(a.date));
+  const container = document.getElementById('historyList');
+  container.innerHTML = '';
+  document.getElementById('historyEmpty').style.display = all.length ? 'none' : 'block';
+  sorted.forEach(r => {
+    const bottleneck = [...r.stations].filter(s => s.fpy !== null).sort((a, b) => a.fpy - b.fpy)[0];
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `
+      <div>
+        <div class="history-date">📅 ${r.date}</div>
+        <div class="history-product">${r.product}</div>
+        <div style="margin-top:6px"><span class="chip">محفوظ: ${new Date(r.savedAt).toLocaleString('ar')}</span></div>
+      </div>
+      <div class="history-stats">
+        <div class="h-stat"><div class="h-stat-val" style="color:var(--green)">${r.overallFPY !== null ? r.overallFPY.toFixed(1) + '%' : '—'}</div><div class="h-stat-lbl">FPY</div></div>
+        <div class="h-stat"><div class="h-stat-val">${r.totalBoards}</div><div class="h-stat-lbl">Boards</div></div>
+        <div class="h-stat"><div class="h-stat-val">${r.achieved}</div><div class="h-stat-lbl">OK</div></div>
+        <div class="h-stat"><div class="h-stat-val" style="color:${bottleneck && bottleneck.fpy < 75 ? 'var(--red)' : 'var(--amber)'}">${bottleneck ? bottleneck.fpy.toFixed(1) + '%' : '—'}</div><div class="h-stat-lbl">Bottleneck</div></div>
+      </div>
+      <div class="history-actions">
+        <button class="btn" onclick="viewReport(${r.id})">👁 عرض</button>
+        <button class="btn btn-danger" onclick="promptDeleteReport(${r.id}, '${r.date}')">🗑</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function viewReport(id) {
+  const all = await dbGetAll();
+  const report = all.find(r => r.id === id);
+  if (report) { renderDashboard(report); showPage('dashboard'); }
+}
+
+function promptDeleteReport(id, date) {
+  promptConfirm('حذف التقرير', `هل تريد حذف تقرير ${date}؟ لا يمكن التراجع.`, async () => {
+    await dbDelete(id);
+    showToast('تم حذف التقرير', 'success');
+    loadHistory();
+    updateSidebar();
+    populateReportSelector();
+  });
+}
+
+function promptClearAll() {
+  promptConfirm('حذف جميع التقارير', 'سيتم حذف كل البيانات المحفوظة نهائياً. هل أنت متأكد؟', async () => {
+    await dbClear();
+    showToast('تم مسح قاعدة البيانات', 'success');
+    loadHistory();
+    updateSidebar();
+    populateReportSelector();
+    document.getElementById('dashContent').style.display = 'none';
+    document.getElementById('dashEmpty').style.display = 'block';
+  });
+}
+
+// ===================== TRENDS =====================
+async function loadTrends() {
+  const all = await dbGetAll();
+  const sorted = all.sort((a, b) => a.date.localeCompare(b.date));
+  document.getElementById('trendEmpty').style.display = sorted.length < 2 ? 'block' : 'none';
+  if (sorted.length < 1) return;
+
+  const labels = sorted.map(r => r.date);
+  const fpyData = sorted.map(r => r.overallFPY);
+  const boardsData = sorted.map(r => r.totalBoards);
+
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'FPY %', data: fpyData,
+        borderColor: '#22c98a', backgroundColor: 'rgba(34,201,138,0.08)',
+        tension: 0.35, fill: true, pointRadius: 5, pointHoverRadius: 7, pointBackgroundColor: '#22c98a'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `FPY: ${c.parsed.y?.toFixed(2)}%` } } },
+      scales: {
+        x: { ticks: { color: '#8b90a0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { callback: v => v + '%', color: '#8b90a0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  if (trendBoardsChart) trendBoardsChart.destroy();
+  trendBoardsChart = new Chart(document.getElementById('trendBoardsChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Boards', data: boardsData,
+        backgroundColor: 'rgba(75,142,240,0.7)', borderRadius: 5, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b90a0', font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: '#8b90a0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+}
+
+// ===================== UI HELPERS =====================
+function fpyClass(fpy) {
+  if (fpy === null) return '';
+  if (fpy >= 90) return 'tag-green';
+  if (fpy >= 75) return 'tag-amber';
+  return 'tag-red';
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name)?.classList.add('active');
+  if (name === 'dashboard') loadLatestReport();
+  if (name === 'history') loadHistory();
+  if (name === 'trend') loadTrends();
+  if (name === 'upload') resetUpload();
+}
+
+function showToast(msg, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function promptConfirm(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function confirmAction() {
+  document.getElementById('confirmModal').classList.remove('show');
+  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.remove('show');
+  confirmCallback = null;
+}
+
+async function updateSidebar() {
+  const all = await dbGetAll();
+  document.getElementById('reportCountText').textContent = `${all.length} تقرير محفوظ`;
+}
+
+async function populateReportSelector() {
+  const all = await dbGetAll();
+  const sorted = all.sort((a, b) => b.date.localeCompare(a.date));
+  const sel = document.getElementById('reportSelector');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">اختر تقريراً...</option>' +
+    sorted.map(r => `<option value="${r.id}" ${r.id == prev ? 'selected' : ''}>${r.date} — ${r.product.slice(0,25)}</option>`).join('');
+}
+
+// ===================== INIT =====================
+async function init() {
+  // Set today's date
+  document.getElementById('reportDate').value = new Date().toISOString().slice(0, 10);
+  await initDB();
+  await updateSidebar();
+  await populateReportSelector();
+  showPage('dashboard');
+}
+
+init();
+</script>
+</body>
+</html>
