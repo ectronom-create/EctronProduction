@@ -637,14 +637,6 @@ function App() {
                         {smartStats.boardsDelta}
                       </div>
                     </div>
-                    <div className="kpi-card">
-                      <div className="kpi-label">Best / Worst Day (FPY)</div>
-                      <div className="kpi-sub">
-                        Best: {smartStats.cur.best ? `${smartStats.cur.best.date} (${smartStats.cur.best.value.toFixed(1)}%)` : '—'}
-                      </div>
-                      <div className="kpi-sub">
-                        Worst: {smartStats.cur.worst ? `${smartStats.cur.worst.date} (${smartStats.cur.worst.value.toFixed(1)}%)` : '—'}
-                      </div>
                     </div>
                   </div>
                 </div>
