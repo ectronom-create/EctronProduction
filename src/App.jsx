@@ -637,7 +637,6 @@ function App() {
                         {smartStats.boardsDelta}
                       </div>
                     </div>
-                    </div>
                   </div>
                 </div>
 
