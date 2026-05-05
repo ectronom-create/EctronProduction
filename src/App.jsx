@@ -20,6 +20,8 @@ import { syncEmployees, fetchEmployees, syncRotationStations, fetchRotationStati
 import EmployeesPage from './EmployeesPage'
 import RotationPage from './RotationPage'
 import StaffDashboard from './StaffDashboard'
+import AuthPage from './AuthPage'
+import { supabase } from './lib/supabase'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
 
@@ -83,7 +85,9 @@ function diffDaysInclusive(fromISO, toISO) {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [session, setSession] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [activeTab, setActiveTab] = useState('staff')
   const [reports, setReports] = useState([])
   const [selectedId, setSelectedId] = useState('')
   const [parsedData, setParsedData] = useState(null)
@@ -107,6 +111,35 @@ function App() {
   const [rotStations, setRotStations] = useState(() => loadStations())
 
   // Load rotation data from Supabase on startup
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) fetchProfile(session.user.id)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      if (session) fetchProfile(session.user.id)
+      else setProfile(null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function fetchProfile(userId) {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
+    if (!error && data) {
+      setProfile(data)
+      if (data.role === 'admin' || data.role === 'supervisor') {
+        setActiveTab('dashboard')
+      } else {
+        setActiveTab('staff')
+      }
+    }
+  }
+
   useEffect(() => {
     async function loadRotationFromSupabase() {
       try {
@@ -488,6 +521,17 @@ function App() {
     ],
   }
 
+  if (!session) {
+    return <AuthPage onSession={setSession} />
+  }
+
+  const userRole = profile?.role || 'staff'
+  const allowedTabs = tabs.filter(t => {
+    if (userRole === 'admin') return true
+    if (userRole === 'supervisor') return t.id !== 'employees'
+    return t.id === 'staff'
+  })
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -496,7 +540,7 @@ function App() {
           <div className="logo-sub">Supabase Connected</div>
         </div>
 
-        {tabs.map((tab) => (
+        {allowedTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -506,6 +550,15 @@ function App() {
             {tab.label}
           </button>
         ))}
+
+        <button
+          type="button"
+          className="nav-item"
+          style={{ marginTop: '20px', color: 'var(--red)' }}
+          onClick={() => supabase.auth.signOut()}
+        >
+          🚪 Logout
+        </button>
 
         <div className="sidebar-bottom">{reports.length} Reports — {rotEmployees.length} Employees</div>
       </aside>
