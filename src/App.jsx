@@ -21,6 +21,7 @@ import EmployeesPage from './EmployeesPage'
 import RotationPage from './RotationPage'
 import StaffDashboard from './StaffDashboard'
 import AuthPage from './AuthPage'
+import UsersPage from './UsersPage'
 import { supabase } from './lib/supabase'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -36,6 +37,7 @@ const tabs = [
   { id: 'employees', label: '👥 Employees' },
   { id: 'rotation', label: '🔄 Rotation' },
   { id: 'staff', label: '🏭 Staff View' },
+  { id: 'users', label: '🔐 Access Control' },
 ]
 
 function fmtPct(value, digits = 2) {
@@ -881,6 +883,9 @@ function App() {
             latestReport={reports.length > 0 ? [...reports].sort((a, b) => b.date.localeCompare(a.date))[0] : null}
           />
         )}
+
+        {activeTab === 'users' && <UsersPage />}
+
       </main>
     </div>
   )
